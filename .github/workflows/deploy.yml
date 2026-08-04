@@ -1,21 +1,25 @@
 name: Deploy to GitHub Pages
 
 on:
+  # Every pull request runs the checks; only main gets deployed.
+  pull_request:
   push:
     branches: [main]
   # Lets you re-deploy from the Actions tab without pushing a commit.
   workflow_dispatch:
 
+# The Pages permissions are granted on the deploy job rather than here, so a
+# pull-request run — the one that builds code from a branch — never holds a
+# token that can publish.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
-# Let an in-flight deploy finish rather than cancelling it, but only queue
-# one follow-up: rapid pushes shouldn't stack up deploys.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  # One in-flight run per branch. Pushing again to a pull request supersedes
+  # the check still running on the old commit; pushes to main queue instead,
+  # so an in-flight deploy is never cancelled part-way.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -39,6 +43,10 @@ jobs:
 
       # Pages serves this repo from /portfolio/, so the asset URLs in
       # index.html have to be rewritten to match or every request 404s.
+      #
+      # Built on pull requests too, not just on main: `flutter analyze` does
+      # not prove the web target compiles, and finding that out during a
+      # deploy is finding out too late.
       - name: Build web
         run: flutter build web --release --base-href /${{ github.event.repository.name }}/
 
@@ -48,18 +56,30 @@ jobs:
       - name: Drop the unused renderer
         run: rm -f build/web/canvaskit/skwasm*
 
+      # Nothing to upload from a pull request — the build above was the point.
       - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
 
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
         with:
           path: build/web
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    # Whatever else is in flight, one deploy at a time, and let it finish.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
