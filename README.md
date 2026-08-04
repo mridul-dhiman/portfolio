@@ -4,12 +4,30 @@ An interactive, CLI-style personal portfolio built with Flutter. The whole page
 behaves like a terminal window: type a command, get output, scroll back through
 history.
 
+Live at **https://mridul-dhiman.github.io/portfolio/**
+
 ## Running
 
 ```bash
 flutter run -d chrome      # web
 flutter run -d macos       # desktop
-flutter test               # 18 tests
+flutter test               # 28 tests
+```
+
+## Deploying
+
+`.github/workflows/deploy.yml` analyzes, tests, builds and publishes to GitHub
+Pages on every push to `main`. A failing test blocks the deploy.
+
+Pages serves this repo from a subpath, so the build passes
+`--base-href /portfolio/`; without it every asset request 404s. The
+`canvasKitBaseUrl` in `web/index.html` is deliberately relative for the same
+reason — it resolves against the base href.
+
+To reproduce a subpath build locally:
+
+```bash
+flutter build web --base-href /portfolio/
 ```
 
 ## Layout
