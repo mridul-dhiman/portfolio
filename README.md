@@ -172,10 +172,17 @@ the reader's.
 
 ## Deploying
 
-`.github/workflows/deploy.yml` analyzes, tests, builds and publishes to GitHub
-Pages on every push to `main`. A failing test blocks the deploy. The workflow
-drops `canvaskit/skwasm*` from the artifact — `index.html` pins the CanvasKit
-renderer, so those files are never requested.
+`.github/workflows/deploy.yml` analyzes, tests and builds on every pull
+request, and does the same plus publishes to GitHub Pages on every push to
+`main`. A failing check blocks the merge rather than only the deploy. The web
+build runs on pull requests too — `flutter analyze` does not prove the web
+target compiles.
+
+Only the deploy job holds `pages: write` and `id-token: write`; a
+pull-request run, which is the one building branch code, gets `contents: read`
+and nothing else. The workflow also drops `canvaskit/skwasm*` from the
+artifact — `index.html` pins the CanvasKit renderer, so those files are never
+requested.
 
 If you change `web/index.html`, note that the generated service worker caches
 the old copy aggressively — hard-reload, or test on a different port, or you
