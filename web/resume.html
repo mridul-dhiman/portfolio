@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>mridul dhiman — resume</title>
+  <meta name="description" content="Full resume of Mridul Dhiman, senior Android and Flutter engineer: Hranker, Oriental Outsourcing, Kohli Media. 1.15M+ downloads, 0.12% crash rate.">
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <!--
+    Not rendered by Flutter. This is the page search engines and ATS-adjacent
+    scrapers actually read: semantic HTML, no framework, no JavaScript. Flutter
+    Web's real weakness is that its canvas output is invisible to them, so the
+    resume lives here in text and the Flutter page links to it.
+  -->
+  <style>
+    @font-face {
+      font-family: 'JetBrainsMono';
+      src: url('fonts/JetBrainsMono-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'JetBrainsMono';
+      src: url('fonts/JetBrainsMono-Medium.woff2') format('woff2');
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* Same five values as lib/theme/tokens.dart. */
+    :root {
+      --ink: #0A0A0A;
+      --paper: #FAFAF7;
+      --accent: #7A4CFA;
+      --fg: var(--ink);
+      --bg: var(--paper);
+      --dim: rgba(10, 10, 10, 0.58);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fg: var(--paper);
+        --bg: var(--ink);
+        --accent: #8759FF;
+        --dim: rgba(250, 250, 247, 0.58);
+      }
+    }
+
+    * { border-radius: 0; box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 32px;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'JetBrainsMono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.7;
+    }
+
+    main { max-width: 880px; }
+
+    h1 {
+      font-size: clamp(32px, 6vw, 56px);
+      font-weight: 500;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: lowercase;
+      margin: 48px 0 8px;
+    }
+
+    h2::before { content: '// '; color: var(--accent); }
+
+    h3 { font-size: 15px; font-weight: 500; margin: 24px 0 0; }
+
+    p, ul, li, dd, dt { margin: 0; }
+    ul { padding-left: 20px; }
+
+    hr { border: 0; border-top: 1px solid var(--fg); margin: 24px 0; }
+
+    a { color: var(--fg); text-decoration-color: var(--accent); }
+    a:hover { color: var(--accent); }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .meta { font-size: 12px; letter-spacing: 0.06em; color: var(--dim); }
+    .tech { color: var(--dim); }
+
+    dl.contact { display: grid; grid-template-columns: max-content 1fr; column-gap: 24px; }
+    dt { color: var(--dim); }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>mridul dhiman</h1>
+    <p class="meta">
+      senior android &amp; flutter engineer · gurugram, in ·
+      software engineer lead at Hranker
+    </p>
+  </header>
+
+  <hr>
+
+  <section aria-labelledby="summary">
+    <h2 id="summary">summary</h2>
+    <p>
+      Mobile engineer with 4+ years building production Android and Flutter
+      applications. Leads a team of 7 mobile engineers at Hranker, where the
+      flagship education app reached 1,150,000+ downloads and #2 rank in its
+      Play Store category. Cut the user-perceived crash rate from 1.24% to
+      0.12% and supported a 346% increase in daily active users over 180 days.
+    </p>
+  </section>
+
+  <section aria-labelledby="numbers">
+    <h2 id="numbers">numbers</h2>
+    <ul>
+      <li>1,150,000+ downloads on the flagship app</li>
+      <li>0.12% crash rate, down from 1.24%</li>
+      <li>346% growth in daily active users over 180 days</li>
+      <li>#2 Play Store rank in category</li>
+      <li>7 mobile engineers led</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="skills">
+    <h2 id="skills">skills</h2>
+    <dl class="contact">
+      <dt>languages</dt>
+      <dd>Kotlin, Java, Dart, Swift</dd>
+      <dt>android</dt>
+      <dd>Android SDK, Jetpack, Coroutines, WorkManager, ExoPlayer, Location APIs, Services, BroadcastReceivers</dd>
+      <dt>flutter</dt>
+      <dd>Flutter SDK, BLoC, Provider, Riverpod, Hive, Sqflite, platform channels, custom widgets, responsive layout</dd>
+      <dt>architecture</dt>
+      <dd>MVVM, clean architecture, multi-module codebases, Hilt / Dagger dependency injection</dd>
+      <dt>backend</dt>
+      <dd>REST, Retrofit, Dio, Firebase (FCM, Remote Config, Analytics), live video streaming</dd>
+      <dt>practice</dt>
+      <dd>Unit and widget testing, CI/CD pipelines, memory and performance profiling, code review</dd>
+    </dl>
+  </section>
+
+  <section aria-labelledby="experience">
+    <h2 id="experience">experience</h2>
+
+    <article>
+      <h3>Software Engineer Lead — Hranker Educational Solution Pvt. Ltd.</h3>
+      <p class="meta">Feb 2024 – present · Gurugram, India</p>
+      <ul>
+        <li>Leads native Android and Flutter development across a multi-app education platform, setting the MVVM and clean-architecture standards the team builds against.</li>
+        <li>Reduced user-perceived crash rate from 1.24% to 0.12% through memory profiling and background-process work.</li>
+        <li>Shipped the features that took the flagship app to 1,150,000+ downloads and #2 Play Store rank in category, supporting 346% DAU growth over 180 days.</li>
+        <li>Integrated ExoPlayer for live streaming and offline media caching, and WorkManager with Location APIs for background sync.</li>
+        <li>Bridges native Android (Kotlin) and iOS (Swift) through platform channels for background services and FCM push.</li>
+        <li>Directs code review, state-management standards and CI/CD for a team of 7 mobile engineers.</li>
+      </ul>
+    </article>
+
+    <article>
+      <h3>Software Engineer — Oriental Outsourcing Consultants (P) Ltd.</h3>
+      <p class="meta">Aug 2021 – Sep 2023 · Kharar, India</p>
+      <ul>
+        <li>Built and maintained native Android apps in Kotlin and Java alongside iOS features in Swift and cross-platform modules in Flutter, for international client projects.</li>
+        <li>Applied MVVM with Hilt/Dagger and Retrofit to keep business logic out of the UI layer.</li>
+        <li>Built reusable widget libraries and responsive layouts that render consistently across phone and tablet form factors.</li>
+        <li>Integrated Firebase Cloud Messaging for real-time notifications and tuned Glide image loading for scroll performance.</li>
+        <li>Ran module testing, refactoring and performance profiling ahead of App Store and Play Store releases.</li>
+      </ul>
+    </article>
+
+    <article>
+      <h3>App Developer Intern — Kohli Media LLP</h3>
+      <p class="meta">Jan 2021 – Jul 2021 · Mohali, India</p>
+      <ul>
+        <li>Built proof-of-concept features for native Android apps in Java and Kotlin from design specifications.</li>
+        <li>Managed asynchronous data loading and REST integration for smooth UI updates.</li>
+        <li>Worked with designers and backend developers to clear critical bugs before deployment.</li>
+      </ul>
+    </article>
+  </section>
+
+  <section aria-labelledby="projects">
+    <h2 id="projects">selected work</h2>
+
+    <article id="e-learning-platform">
+      <h3>E-learning platform</h3>
+      <p class="tech">Kotlin · Flutter · ExoPlayer · Coroutines · BLoC · offline cache</p>
+      <p>
+        Live classes, offline lesson downloads and a timed test engine, across
+        three production applications. Handles continuous video playback and
+        background downloads without the memory and battery cost that usually
+        comes with them. #2 in its Play Store category.
+      </p>
+    </article>
+
+    <article id="workforce-management">
+      <h3>Workforce management</h3>
+      <p class="tech">Kotlin · Flutter · Location APIs · geofencing · WorkManager · FCM</p>
+      <p>
+        Field-staff location tracking and site geofences that keep running while
+        the app is closed, with WorkManager for persistent sync and FCM pushing
+        task updates. Background location written natively and exposed to the
+        Flutter layer through platform channels.
+      </p>
+    </article>
+
+    <article id="sports-data-client">
+      <h3>Sports data client</h3>
+      <p class="tech">Java · Retrofit · Coroutines · Android SDK</p>
+      <p>
+        Native client for a high-frequency sports data API, consuming and
+        rendering match feeds asynchronously so the UI thread stays free.
+      </p>
+    </article>
+  </section>
+
+  <section aria-labelledby="education">
+    <h2 id="education">education</h2>
+    <p>B.Tech, Computer Science &amp; Engineering — DAV Institute of Engineering and Technology, Jalandhar</p>
+    <p class="meta">Aug 2018 – Jul 2021</p>
+  </section>
+
+  <section aria-labelledby="contact">
+    <h2 id="contact">contact</h2>
+    <dl class="contact">
+      <dt>email</dt>
+      <dd><a href="mailto:mridul98dhiman@gmail.com">mridul98dhiman@gmail.com</a></dd>
+      <dt>github</dt>
+      <dd><a href="https://github.com/mridul-dhiman">github.com/mridul-dhiman</a></dd>
+      <dt>linkedin</dt>
+      <dd><a href="https://linkedin.com/in/mridul-d">linkedin.com/in/mridul-d</a></dd>
+    </dl>
+  </section>
+
+  <hr>
+
+  <p class="meta"><a href="./">← back to the interactive version</a></p>
+</main>
+</body>
+</html>

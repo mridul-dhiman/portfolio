@@ -42,6 +42,12 @@ jobs:
       - name: Build web
         run: flutter build web --release --base-href /${{ github.event.repository.name }}/
 
+      # `web/index.html` pins `renderer: "canvaskit"`, so the skwasm engine
+      # files are never requested. Shipping them anyway adds ~12 MB to the
+      # Pages artifact for nothing.
+      - name: Drop the unused renderer
+        run: rm -f build/web/canvaskit/skwasm*
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3

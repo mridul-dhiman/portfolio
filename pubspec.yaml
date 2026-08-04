@@ -1,5 +1,5 @@
-name: cli_portfolio
-description: "A new Flutter project."
+name: portfolio
+description: "Personal portfolio for Mridul Dhiman — Flutter Web, deployed static."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -27,13 +27,13 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+# No third-party packages. `flutter_web_plugins` ships with the SDK and is
+# here only for `usePathUrlStrategy()`.
 dependencies:
   flutter:
     sdk: flutter
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
+  flutter_web_plugins:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -55,14 +55,19 @@ flutter:
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
-  uses-material-design: true
+  # No icon set in the design, so the Material icon font is dead weight.
+  uses-material-design: false
 
+  # JetBrains Mono, subset to latin, weights 400 and 500 only. TTF rather than
+  # the woff2 in web/fonts/ because CanvasKit cannot decode woff2 — the woff2
+  # pair is for index.html and resume.html, which are plain HTML.
   fonts:
-    - family: RobotoMono
+    - family: JetBrainsMono
       fonts:
-        - asset: assets/fonts/RobotoMono-Regular.ttf
-        - asset: assets/fonts/RobotoMono-Bold.ttf
-          weight: 700
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/JetBrainsMono-Medium.ttf
+          weight: 500
 
   # To add assets to your application, add an assets section, like this:
   # assets:

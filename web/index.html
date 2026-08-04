@@ -1,60 +1,175 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
+  <!-- Rewritten by `flutter build web --base-href`. Pages serves this repo
+       from /portfolio/, so it is not "/". -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Mridul Dhiman — software engineer. An interactive terminal-style portfolio.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-  <!-- iOS meta tags & icons -->
+  <title>mridul dhiman — android & flutter engineer</title>
+  <meta name="description" content="Senior Android and Flutter engineer in Gurugram. 1.15M+ downloads, 0.12% crash rate, leading 7 engineers at Hranker.">
+  <link rel="canonical" href="https://mridul-dhiman.github.io/portfolio/">
+  <meta name="theme-color" content="#FAFAF7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)">
+
+  <meta property="og:type" content="profile">
+  <meta property="og:title" content="mridul dhiman — android & flutter engineer">
+  <meta property="og:description" content="1,150,000+ downloads. 0.12% crash rate. Leading 7 engineers at Hranker, Gurugram.">
+  <meta property="og:image" content="https://mridul-dhiman.github.io/portfolio/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="1,150,000+ downloads, 0.12% crash rate — mridul dhiman, senior android engineer.">
+  <meta property="og:url" content="https://mridul-dhiman.github.io/portfolio/">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="mridul dhiman — android & flutter engineer">
+  <meta name="twitter:description" content="1,150,000+ downloads. 0.12% crash rate. Leading 7 engineers at Hranker, Gurugram.">
+  <meta name="twitter:image" content="https://mridul-dhiman.github.io/portfolio/og.png">
+
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="mridul-portfolio">
+  <meta name="apple-mobile-web-app-title" content="mridul_dhiman">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>Mridul Dhiman — Terminal Portfolio</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- Match the app background so there's no white flash before Flutter boots. -->
+  <!-- Preloaded because the loading state below renders in it, before any
+       Flutter code has run. Same subset the app bundles. -->
+  <link rel="preload" href="fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Mridul Dhiman",
+    "url": "https://mridul-dhiman.github.io/portfolio/",
+    "image": "https://mridul-dhiman.github.io/portfolio/og.png",
+    "email": "mailto:mridul98dhiman@gmail.com",
+    "jobTitle": "Software Engineer Lead",
+    "description": "Senior Android and Flutter engineer. 1.15M+ downloads shipped, 0.12% crash rate, leading a team of 7.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Gurugram",
+      "addressCountry": "IN"
+    },
+    "worksFor": {
+      "@type": "Organization",
+      "name": "Hranker Educational Solution Pvt. Ltd."
+    },
+    "knowsAbout": ["Android", "Kotlin", "Flutter", "Dart", "Swift", "Jetpack", "MVVM", "Clean Architecture"],
+    "sameAs": [
+      "https://github.com/mridul-dhiman",
+      "https://linkedin.com/in/mridul-d"
+    ]
+  }
+  </script>
+
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; background-color: #0C0C0C; }
+    /* The single most common reason a Flutter portfolio reads as broken is the
+       default blank white flash before the engine boots. This is that gap,
+       styled on purpose: paper ground, one blinking ink cursor, centred. */
+    @font-face {
+      font-family: 'JetBrainsMono';
+      src: url('fonts/JetBrainsMono-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --ink: #0A0A0A;
+      --paper: #FAFAF7;
+      --fg: var(--ink);
+      --bg: var(--paper);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root { --fg: var(--paper); --bg: var(--ink); }
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'JetBrainsMono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    #boot {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+    }
+
+    #boot span {
+      display: block;
+      width: 0.6em;
+      height: 1em;
+      font-size: 32px;
+      background: var(--fg);
+      animation: blink 1060ms steps(1, end) infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      50.01%, 100% { opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #boot span { animation: none; }
+    }
   </style>
+
+  <!-- Without JS the boot cursor never gets removed, and it would sit on top
+       of the noscript fallback forever. -->
+  <noscript><style>#boot { display: none; }</style></noscript>
 </head>
 <body>
-  <!--
-    Custom bootstrap so CanvasKit is loaded from the copy `flutter build web`
-    already places in build/web/canvaskit/, rather than from gstatic.com.
-    Keeps the whole app on one origin — no third-party CDN at runtime.
+  <div id="boot" role="status" aria-label="loading"><span></span></div>
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
   <script>
     {{flutter_js}}
     {{flutter_build_config}}
 
     _flutter.loader.load({
       config: {
+        // CanvasKit explicitly, served from the copy `flutter build web`
+        // writes into build/web/canvaskit/ rather than from gstatic.com at
+        // runtime. Relative so it resolves against the base href.
+        renderer: "canvaskit",
         canvasKitBaseUrl: "canvaskit/",
+      },
+      onEntrypointLoaded: async function (engineInitializer) {
+        const appRunner = await engineInitializer.initializeEngine();
+        await appRunner.runApp();
+        // Only now is there something to look at.
+        document.getElementById("boot")?.remove();
+        // The engine replaces the viewport meta with its own, which pins
+        // maximum-scale and sets user-scalable=no. This page is a scrolling
+        // document, not a gesture surface — pinch-zoom is the reader's, and
+        // WCAG 1.4.4 says so. Put it back.
+        document
+          .querySelector("meta[flt-viewport]")
+          ?.setAttribute(
+            "content",
+            "width=device-width, initial-scale=1, viewport-fit=cover"
+          );
       },
     });
   </script>
+
+  <noscript>
+    <p style="padding: 32px">
+      This page is built with Flutter Web and needs JavaScript.
+      The full resume is available as plain HTML at
+      <a href="resume.html">resume.html</a>.
+    </p>
+  </noscript>
 </body>
 </html>
