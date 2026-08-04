@@ -1,12 +1,12 @@
 {
-    "name": "Mridul Dhiman \u2014 Terminal Portfolio",
-    "short_name": "mridul-portfolio",
+    "name": "mridul dhiman \u2014 android & flutter engineer",
+    "short_name": "mridul_dhiman",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0C0C0C",
-    "theme_color": "#0C0C0C",
-    "description": "Interactive terminal-style portfolio for Mridul Dhiman.",
-    "orientation": "portrait-primary",
+    "background_color": "#FAFAF7",
+    "theme_color": "#FAFAF7",
+    "description": "Portfolio of Mridul Dhiman, senior Android and Flutter engineer.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

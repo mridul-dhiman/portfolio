@@ -1,312 +1,217 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
-import 'models/terminal_item.dart';
-import 'services/command_processor.dart';
+import 'data/content.dart';
+import 'models/persona.dart';
+import 'sections/contact.dart';
+import 'sections/experience.dart';
+import 'sections/hero.dart';
+import 'sections/skills.dart';
+import 'sections/work.dart';
+import 'theme/app_theme.dart';
+import 'theme/tokens.dart';
+import 'widgets/accent.dart';
+import 'widgets/nav_bar.dart';
+import 'widgets/responsive.dart';
 
 void main() {
+  // Drops the `#` from the URL so `/resume.html` and the page itself share a
+  // sane path space.
+  usePathUrlStrategy();
   runApp(const PortfolioApp());
 }
 
-class PortfolioApp extends StatelessWidget {
+class PortfolioApp extends StatefulWidget {
   const PortfolioApp({super.key});
 
-  static const Color background = Color(0xFF0C0C0C);
-  static const Color terminalGreen = Color(0xFF00FF00);
+  @override
+  State<PortfolioApp> createState() => _PortfolioAppState();
+}
 
-  /// Bundled in assets/fonts and declared in pubspec.yaml, so the terminal
-  /// text is served from our own origin with no fallback-font flash on first
-  /// paint. (The Flutter web engine separately fetches CanvasKit and its
-  /// default Roboto fallback from gstatic.com; see README for self-hosting.)
-  static const String monoFont = 'RobotoMono';
+class _PortfolioAppState extends State<PortfolioApp> {
+  /// The whole of the site's state. One enum does not need Riverpod, Bloc or
+  /// Provider — a portfolio that over-engineers its own state management
+  /// argues against its author.
+  final ValueNotifier<Persona> _persona = ValueNotifier(Persona.android);
+
+  @override
+  void dispose() {
+    _persona.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mridul Dhiman — Terminal Portfolio',
+      title: PortfolioPage.title,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        fontFamily: monoFont,
-        scaffoldBackgroundColor: background,
-        textTheme: ThemeData.dark().textTheme.apply(
-          fontFamily: monoFont,
-          bodyColor: terminalGreen,
-          displayColor: terminalGreen,
-        ),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: terminalGreen,
-          brightness: Brightness.dark,
-        ),
-      ),
-      home: const TerminalScreen(),
+      theme: AppTheme.of(Brightness.light),
+      darkTheme: AppTheme.of(Brightness.dark),
+      // No manual switch: the page follows `prefers-color-scheme`. The one
+      // toggle on the page is the build variant.
+      themeMode: ThemeMode.system,
+      home: ResponsiveLayout(child: PortfolioPage(persona: _persona)),
     );
   }
 }
 
-class TerminalScreen extends StatefulWidget {
-  const TerminalScreen({super.key});
+class PortfolioPage extends StatefulWidget {
+  const PortfolioPage({super.key, required this.persona});
+
+  static const String title = 'mridul dhiman — android & flutter engineer';
+
+  final ValueNotifier<Persona> persona;
 
   @override
-  State<TerminalScreen> createState() => _TerminalScreenState();
+  State<PortfolioPage> createState() => _PortfolioPageState();
 }
 
-class _TerminalScreenState extends State<TerminalScreen> {
-  final TextEditingController _inputController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  late final FocusNode _focusNode = FocusNode(onKeyEvent: _handleKeyEvent);
-
-  /// Holds the selected [PortfolioFocus] across commands.
-  final CommandProcessor _processor = CommandProcessor();
-
-  final List<TerminalItem> _history = [
-    const TerminalItem(
-      output:
-          'Welcome to mridul-portfolio [Version 1.0.0]\n'
-          "Type 'help' to see a list of available commands.\n"
-          'Use the up/down arrow keys to browse previous commands.',
-    ),
-  ];
-
-  /// Commands the visitor actually ran, oldest first — the shell-style
-  /// recall buffer. Deliberately survives `clear`, which wipes the screen
-  /// rather than the history, matching a real terminal.
-  final List<String> _commandHistory = [];
-
-  /// Position within [_commandHistory]. Equal to its length when the user is
-  /// on the live input line rather than recalling a past command.
-  int _historyCursor = 0;
-
-  /// Whatever was half-typed before stepping back into history, so pressing
-  /// down-arrow all the way returns it instead of an empty line.
-  String _draft = '';
+class _PortfolioPageState extends State<PortfolioPage> {
+  final ScrollController _controller = ScrollController();
+  final Map<SectionKey, GlobalKey> _anchors = {
+    for (final key in SectionKey.values) key: GlobalKey(),
+  };
 
   @override
   void dispose() {
-    _inputController.dispose();
-    _focusNode.dispose();
-    _scrollController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
-  /// Maps up/down arrows onto history recall. Everything else falls through
-  /// to the TextField so normal typing and caret movement are untouched.
-  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
-      return KeyEventResult.ignored;
-    }
+  /// Jumps — does not animate — to a section, landing its first line just
+  /// below the pinned bar.
+  void _navigate(SectionKey section) {
+    final context = _anchors[section]?.currentContext;
+    if (context == null || !_controller.hasClients) return;
 
-    switch (event.logicalKey) {
-      case LogicalKeyboardKey.arrowUp:
-        _recallHistory(-1);
-        return KeyEventResult.handled;
-      case LogicalKeyboardKey.arrowDown:
-        _recallHistory(1);
-        return KeyEventResult.handled;
-      default:
-        return KeyEventResult.ignored;
-    }
-  }
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
 
-  /// Steps [delta] entries through [_commandHistory] and loads the result
-  /// into the input, caret parked at the end.
-  void _recallHistory(int delta) {
-    if (_commandHistory.isEmpty) return;
+    final viewport = RenderAbstractViewport.of(box);
+    final target =
+        viewport.getOffsetToReveal(box, 0).offset -
+        NavBar.heightFor(Layout.of(context));
 
-    // Stash the live line the first time we step off it.
-    if (_historyCursor == _commandHistory.length) {
-      _draft = _inputController.text;
-    }
-
-    final next = (_historyCursor + delta).clamp(0, _commandHistory.length);
-    if (next == _historyCursor) return;
-    _historyCursor = next;
-
-    final text = next == _commandHistory.length
-        ? _draft
-        : _commandHistory[next];
-    _inputController.value = TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
-    );
-  }
-
-  void _scrollToBottom() {
-    // Deferred a frame so the newly appended entry is laid out and
-    // maxScrollExtent reflects it.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
-    });
-  }
-
-  void _submitCommand(String rawInput) {
-    final output = _processor.run(rawInput);
-
-    setState(() {
-      if (output == null) {
-        _history.clear();
-      } else {
-        _history.add(TerminalItem(command: rawInput, output: output));
-      }
-    });
-
-    _recordInHistory(rawInput);
-    _inputController.clear();
-    _scrollToBottom();
-    // Enter can drop focus on web/desktop; take it straight back.
-    _focusNode.requestFocus();
-  }
-
-  /// Appends to the recall buffer and returns the cursor to the live line.
-  /// Blank input and an immediate repeat of the previous command are skipped,
-  /// so arrowing back doesn't wade through duplicates.
-  void _recordInHistory(String rawInput) {
-    final command = rawInput.trim();
-    if (command.isNotEmpty &&
-        (_commandHistory.isEmpty || _commandHistory.last != command)) {
-      _commandHistory.add(command);
-    }
-    _historyCursor = _commandHistory.length;
-    _draft = '';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const textStyle = TextStyle(fontSize: 14, height: 1.5);
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _focusNode.requestFocus,
-      child: Scaffold(
-        backgroundColor: PortfolioApp.background,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: EdgeInsets.zero,
-                    itemCount: _history.length,
-                    itemBuilder: (context, index) => _TerminalEntry(
-                      item: _history[index],
-                      textStyle: textStyle,
-                    ),
-                  ),
-                ),
-                _TerminalInputRow(
-                  controller: _inputController,
-                  focusNode: _focusNode,
-                  textStyle: textStyle,
-                  onSubmitted: _submitCommand,
-                ),
-              ],
-            ),
-          ),
-        ),
+    _controller.jumpTo(
+      target.clamp(
+        _controller.position.minScrollExtent,
+        _controller.position.maxScrollExtent,
       ),
     );
   }
-}
-
-/// Renders one history entry: the echoed prompt + command, then its output.
-class _TerminalEntry extends StatelessWidget {
-  const _TerminalEntry({required this.item, required this.textStyle});
-
-  final TerminalItem item;
-  final TextStyle textStyle;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (item.command != null)
-            SelectableText.rich(
-              TextSpan(
-                style: textStyle,
-                children: [
-                  TextSpan(
-                    text: CommandProcessor.promptPrefix,
-                    style: const TextStyle(
-                      color: PortfolioApp.terminalGreen,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(
-                    text: item.command,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ],
+    final layout = Layout.of(context);
+    final persona = widget.persona;
+
+    return Scaffold(
+      body: PrimaryScrollController(
+        controller: _controller,
+        child: CustomScrollView(
+          controller: _controller,
+          slivers: [
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _NavBarDelegate(
+                extent: NavBar.heightFor(layout),
+                child: NavBar(persona: persona, onNavigate: _navigate),
               ),
             ),
-          if (item.output.isNotEmpty)
-            SelectableText(
-              item.output,
-              style: textStyle.copyWith(color: const Color(0xFFD8D8D8)),
+            SliverToBoxAdapter(child: HeroSection(persona: persona)),
+            SliverToBoxAdapter(child: SkillsTable(persona: persona)),
+            SliverToBoxAdapter(
+              child: _SectionTitle(
+                key: _anchors[SectionKey.work],
+                persona: persona,
+                section: SectionKey.work,
+              ),
             ),
-        ],
+            SliverList.builder(
+              itemCount: Content.work.length,
+              itemBuilder: (context, index) =>
+                  WorkRow(persona: persona, item: Content.work[index]),
+            ),
+            SliverToBoxAdapter(
+              child: _SectionTitle(
+                key: _anchors[SectionKey.experience],
+                persona: persona,
+                section: SectionKey.experience,
+              ),
+            ),
+            const SliverToBoxAdapter(child: ExperienceList()),
+            const SliverToBoxAdapter(child: Rule()),
+            SliverToBoxAdapter(
+              // The key goes on the box, not the sliver: `_navigate` measures
+              // a RenderBox against the viewport.
+              child: ContactFooter(
+                key: _anchors[SectionKey.contact],
+                persona: persona,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-/// The always-focused input line pinned below the history.
-class _TerminalInputRow extends StatelessWidget {
-  const _TerminalInputRow({
-    required this.controller,
-    required this.focusNode,
-    required this.textStyle,
-    required this.onSubmitted,
+/// `// section_name` with the rules above and below it that separate the
+/// page's bands.
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({
+    super.key,
+    required this.persona,
+    required this.section,
   });
 
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final TextStyle textStyle;
-  final ValueChanged<String> onSubmitted;
+  final ValueNotifier<Persona> persona;
+  final SectionKey section;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    final layout = Layout.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          CommandProcessor.promptPrefix,
-          style: textStyle.copyWith(
-            color: PortfolioApp.terminalGreen,
-            fontWeight: FontWeight.bold,
+        const Rule(),
+        Padding(
+          padding: layout.contentPadding.copyWith(
+            top: layout.sectionPadding,
+            bottom: Tokens.space3,
           ),
-        ),
-        Expanded(
-          child: TextField(
-            controller: controller,
-            focusNode: focusNode,
-            autofocus: true,
-            cursorColor: PortfolioApp.terminalGreen,
-            cursorWidth: 8,
-            style: textStyle.copyWith(color: Colors.white),
-            textInputAction: TextInputAction.go,
-            inputFormatters: [FilteringTextInputFormatter.singleLineFormatter],
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
+          child: ContentRail(
+            child: SectionHeader(
+              persona: persona,
+              label: Content.sectionLabel[section]!,
             ),
-            onSubmitted: onSubmitted,
           ),
         ),
+        const Rule(),
       ],
     );
   }
+}
+
+class _NavBarDelegate extends SliverPersistentHeaderDelegate {
+  const _NavBarDelegate({required this.extent, required this.child});
+
+  final double extent;
+  final Widget child;
+
+  @override
+  double get minExtent => extent;
+
+  @override
+  double get maxExtent => extent;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlaps) =>
+      SizedBox(height: extent, child: child);
+
+  @override
+  bool shouldRebuild(_NavBarDelegate oldDelegate) =>
+      extent != oldDelegate.extent || child != oldDelegate.child;
 }
