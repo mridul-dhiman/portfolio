@@ -9,11 +9,7 @@ import 'responsive.dart';
 
 /// The pinned bar: wordmark, section anchors, and the build-variant toggle.
 class NavBar extends StatelessWidget {
-  const NavBar({
-    super.key,
-    required this.persona,
-    required this.onNavigate,
-  });
+  const NavBar({super.key, required this.persona, required this.onNavigate});
 
   final ValueNotifier<Persona> persona;
 
@@ -76,9 +72,10 @@ class NavBar extends StatelessWidget {
     final links = _NavLinks(persona: persona, onNavigate: onNavigate);
     final toggle = BuildVariantToggle(persona: persona);
 
-    // Below 600 the wordmark, the anchors and the 27-character build command
-    // cannot share a row at 320px, so the anchors drop: the page is five
-    // sections long and scrolling is the natural gesture there anyway.
+    // Below 600 the wordmark, the anchors and the build command cannot share a
+    // row at 320px, so the anchors drop: the page is five sections long and
+    // scrolling is the natural gesture there anyway. The widest the toggle gets
+    // is the bracketed gradle line at 29 characters, which still fits 320.
     final Widget content = layout.isWide
         ? Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -194,10 +191,20 @@ class _NavLink extends StatelessWidget {
 class BuildVariantToggle extends StatelessWidget {
   const BuildVariantToggle({super.key, required this.persona});
 
-  /// Prefix on the active line. The inactive line is indented to match so the
-  /// two commands stay column-aligned.
+  /// Prompt on the active line: the build currently rendered.
   static const String prompt = r'$ ';
-  static const String inactivePrompt = '  ';
+
+  /// The inactive line is drawn as a bracketed action — the TUI convention for
+  /// the thing you can run — rather than as a dimmer copy of the active line.
+  ///
+  /// It used to be `dim` plus a two-space indent, lifting to full contrast only
+  /// under the pointer. That put the entire affordance in hover, which does not
+  /// exist on touch: on a phone the second build was inert grey text and the
+  /// toggle was undiscoverable. The brackets carry it on every input instead.
+  ///
+  /// Both openers are two columns wide, so the commands stay aligned.
+  static const String inactivePrompt = '[ ';
+  static const String inactiveSuffix = ' ]';
 
   final ValueNotifier<Persona> persona;
 
@@ -234,54 +241,83 @@ class _BuildCommandLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Layout.of(context).brightness;
-    final style = Tokens.meta(brightness);
+    final page = Layout.of(context).brightness;
 
-    return AccentBuilder(
-      persona: persona,
-      builder: (context, accent) {
-        // `armed` is the inactive line under the pointer: it comes up out of
-        // `dim` to full contrast, the way a shell command does when it is the
-        // one about to run. Instant, no transition.
-        Widget lineFor({required bool armed}) => Text.rich(
-          maxLines: 1,
-          softWrap: false,
-          overflow: TextOverflow.clip,
-          TextSpan(
-            style: style,
-            children: [
-              TextSpan(
-                text: active
-                    ? BuildVariantToggle.prompt
-                    : BuildVariantToggle.inactivePrompt,
-                style: TextStyle(color: accent),
-              ),
-              TextSpan(
-                text: Content.buildCommand[value],
-                style: TextStyle(
-                  color: active || armed
-                      ? Tokens.foregroundOn(brightness)
-                      : Tokens.dimOn(brightness),
-                ),
-              ),
-            ],
-          ),
-        );
+    // The active line is a statement of current state, not a control: only the
+    // line that would change something is focusable or clickable.
+    if (active) {
+      return AccentBuilder(
+        persona: persona,
+        builder: (context, accent) => _line(surface: page, accent: accent),
+      );
+    }
 
-        // The active line is a statement of current state, not a control:
-        // only the line that would change something is focusable or clickable.
-        if (active) return lineFor(armed: false);
+    return Interactive(
+      onActivate: () => persona.value = value,
+      semanticLabel: Content.buildCommandSemantics[value],
+      builder: (context, hovered, focused) {
+        // `armed` is the bracketed line under the pointer or under focus. It
+        // inverts the way a WorkRow does — the chip takes the opposite ground
+        // and every glyph follows it — which keeps the pairing inside the
+        // token set the contrast test already walks. Instant, no transition.
+        final armed = hovered || focused;
+        final surface = armed ? _flip(page) : page;
 
-        return Interactive(
-          onActivate: () => persona.value = value,
-          semanticLabel: Content.buildCommandSemantics[value],
-          builder: (context, hovered, focused) => FocusRing(
+        // Two accents, because there are two grounds. The ring is painted
+        // outside the chip, on the page, so it takes the page's accent; the
+        // glyphs inside the chip take the inverted one. One builder for both
+        // would put one of them on the wrong ground.
+        return AccentBuilder(
+          persona: persona,
+          builder: (context, pageAccent) => FocusRing(
             focused: focused,
-            accent: accent,
-            child: lineFor(armed: hovered),
+            accent: pageAccent,
+            child: AccentBuilder(
+              persona: persona,
+              surface: surface,
+              builder: (context, accent) => ColoredBox(
+                // Unconditional: unarmed this repaints the ground already
+                // there, so the only thing `armed` changes is which ground.
+                color: Tokens.backgroundOn(surface),
+                child: _line(surface: surface, accent: accent),
+              ),
+            ),
           ),
         );
       },
     );
   }
+
+  /// The command, at full contrast on whichever ground it is sitting on. Never
+  /// `dim` — see [BuildVariantToggle.inactivePrompt] for why that mattered.
+  Widget _line({required Brightness surface, required Color accent}) {
+    return Text.rich(
+      maxLines: 1,
+      softWrap: false,
+      overflow: TextOverflow.clip,
+      TextSpan(
+        style: Tokens.meta(surface),
+        children: [
+          TextSpan(
+            text: active
+                ? BuildVariantToggle.prompt
+                : BuildVariantToggle.inactivePrompt,
+            style: TextStyle(color: accent),
+          ),
+          TextSpan(
+            text: Content.buildCommand[value],
+            style: TextStyle(color: Tokens.foregroundOn(surface)),
+          ),
+          if (!active)
+            TextSpan(
+              text: BuildVariantToggle.inactiveSuffix,
+              style: TextStyle(color: accent),
+            ),
+        ],
+      ),
+    );
+  }
+
+  static Brightness _flip(Brightness brightness) =>
+      brightness == Brightness.light ? Brightness.dark : Brightness.light;
 }

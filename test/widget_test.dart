@@ -83,7 +83,10 @@ void main() {
       for (final size in [narrow, medium, wide]) {
         await _pumpPage(tester, size);
         // Scroll the whole page so every sliver is laid out at this width.
-        await tester.drag(find.byType(CustomScrollView), const Offset(0, -2000));
+        await tester.drag(
+          find.byType(CustomScrollView),
+          const Offset(0, -2000),
+        );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: 'at ${size.width}px');
       }
@@ -161,6 +164,55 @@ void main() {
         expect(find.text(item.title), findsOneWidget);
       }
       expect(tester.getRect(find.text(Content.work.first.title)), before);
+    });
+
+    testWidgets('offers the inactive build at full contrast, unhovered', (
+      tester,
+    ) async {
+      await _pumpPage(tester, narrow);
+
+      // The whole affordance used to be hover: the inactive line sat at `dim`
+      // and only rose to full contrast under the pointer. Touch has no pointer,
+      // so on a phone the second build read as inert grey text. Assert the two
+      // things that replaced it, with nothing hovered and at the narrowest
+      // width — the case that was broken.
+      final line = _inactiveLine(tester);
+      expect(
+        line.toPlainText(),
+        '${BuildVariantToggle.inactivePrompt}'
+        '${Content.buildCommand[Persona.flutter]}'
+        '${BuildVariantToggle.inactiveSuffix}',
+      );
+
+      final command = _spans(line).firstWhere(
+        (span) => span.text == Content.buildCommand[Persona.flutter],
+      );
+      expect(command.style!.color, Tokens.foregroundOn(Brightness.light));
+      expect(command.style!.color, isNot(Tokens.dimOn(Brightness.light)));
+    });
+
+    testWidgets('inverts the bracketed line on hover, instantly', (
+      tester,
+    ) async {
+      await _pumpPage(tester, wide);
+      final chip = find.byType(BuildVariantToggle);
+
+      expect(_chipBackground(tester), Tokens.paper);
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      addTearDown(mouse.removePointer);
+      await mouse.addPointer(location: Offset.zero);
+      await tester.pump();
+      await mouse.moveTo(
+        tester.getCenter(
+          find.descendant(of: chip, matching: find.byType(ColoredBox)),
+        ),
+      );
+      // One frame, no settle: the inversion has no transition. The accent
+      // crossfade is keyed on the surface, so a flip skips it too.
+      await tester.pump();
+
+      expect(_chipBackground(tester), Tokens.ink);
     });
   });
 
@@ -250,9 +302,7 @@ void main() {
     ) async {
       for (final size in [narrow, medium, wide]) {
         await _pumpPage(tester, size);
-        final layout = Layout.of(
-          tester.element(find.byType(NavBar)),
-        );
+        final layout = Layout.of(tester.element(find.byType(NavBar)));
         expect(
           tester.getSize(find.byType(NavBar)).height,
           NavBar.heightFor(layout),
@@ -292,6 +342,30 @@ String _eyebrow(WidgetTester tester) {
   return text.substring(SectionHeader.marker.length);
 }
 
+/// Every [TextSpan] in [span], depth-first. `Text.rich` nests the span it is
+/// handed inside a root carrying the resolved style, so the spans a widget
+/// declares do not sit at a fixed depth.
+Iterable<TextSpan> _spans(InlineSpan span) sync* {
+  if (span is! TextSpan) return;
+  yield span;
+  for (final child in span.children ?? const <InlineSpan>[]) {
+    yield* _spans(child);
+  }
+}
+
+/// The build command that is *not* prompted — the bracketed, tappable one.
+InlineSpan _inactiveLine(WidgetTester tester) => tester
+    .widgetList<RichText>(
+      find.descendant(
+        of: find.byType(BuildVariantToggle),
+        matching: find.byType(RichText),
+      ),
+    )
+    .map((widget) => widget.text)
+    .firstWhere(
+      (text) => !text.toPlainText().startsWith(BuildVariantToggle.prompt),
+    );
+
 String _promptedCommand(WidgetTester tester) {
   final lines = tester
       .widgetList<RichText>(
@@ -310,12 +384,28 @@ Future<void> _swapPersona(WidgetTester tester, Persona target) async {
     find.descendant(
       of: find.byType(BuildVariantToggle),
       matching: find.text(
-        '${BuildVariantToggle.inactivePrompt}${Content.buildCommand[target]}',
+        '${BuildVariantToggle.inactivePrompt}'
+        '${Content.buildCommand[target]}'
+        '${BuildVariantToggle.inactiveSuffix}',
         findRichText: true,
       ),
     ),
   );
   await tester.pumpAndSettle();
+}
+
+/// The ground the bracketed (inactive) build line paints for itself. Only that
+/// line has a [ColoredBox]; the prompted one is a bare span.
+Color _chipBackground(WidgetTester tester) {
+  final box = tester.widget<ColoredBox>(
+    find
+        .descendant(
+          of: find.byType(BuildVariantToggle),
+          matching: find.byType(ColoredBox),
+        )
+        .first,
+  );
+  return box.color;
 }
 
 Color _rowBackground(WidgetTester tester, Finder row) {

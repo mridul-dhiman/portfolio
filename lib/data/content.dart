@@ -43,8 +43,8 @@ class Content {
   // -------------------------------------------------------------------
 
   static const Map<Persona, String> heroEyebrow = {
-    Persona.android: 'senior android engineer',
-    Persona.flutter: 'senior flutter engineer',
+    Persona.android: 'android engineer',
+    Persona.flutter: 'flutter engineer',
   };
 
   /// Two lines. The numbers carry the persuasion, so they lead and the prose
